@@ -3,6 +3,7 @@
 namespace Runline\ProfileTool\Http\Controllers;
 
 use Illuminate\Routing\Controller;
+use App\Rules\StrongPassword;
 
 class ToolController extends Controller
 {
@@ -61,11 +62,17 @@ class ToolController extends Controller
      */
     public function store()
     {
-        request()->validate([
-            'name' => 'required|string',
-            'email' => 'required|email',
-            'password' => 'nullable|string|confirmed'
-        ]);
+        $rules = [
+            'name' =>  ['required', 'string'],
+            'email' => ['required', 'email'],
+            'password' => ['nullable', 'string', 'confirmed'],
+        ];
+
+        if (auth()->user()->isAdmin()) {
+            $rules['password'][] = new StrongPassword();
+        }
+
+        request()->validate($rules);
 
         if(request()->has('password')) {
             auth()->user()->update([
